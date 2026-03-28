@@ -3,8 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-             xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:local="clr-namespace:VerticalTabControlLib"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
@@ -109,7 +108,7 @@
                     <ItemsPanelTemplate>
                         <StackPanel>
                             <i:Interaction.Behaviors>
-                                <ei:FluidMoveBehavior AppliesTo="Children" Duration="0:0:0.12"></ei:FluidMoveBehavior>
+                                <i:FluidMoveBehavior AppliesTo="Children" Duration="0:0:0.12"></i:FluidMoveBehavior>
                             </i:Interaction.Behaviors>
                         </StackPanel>
                     </ItemsPanelTemplate>

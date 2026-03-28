@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
 
-namespace ExcelVerticalTab
+namespace ExcelVerticalTab;
+
+public class EventArgs<T>(T value) : EventArgs
 {
-    public class EventArgs<T> : EventArgs
-    {
-        public EventArgs(T value)
-        {
-            Value = value;
-        }
-
-        public T Value { get; }
-    }
+    public T Value { get; } = value;
 }
