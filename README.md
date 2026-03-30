@@ -2,7 +2,7 @@
 
 [![Excel](https://img.shields.io/badge/Microsoft%20Excel-217346?style=for-the-badge&logo=microsoft-excel&logoColor=white)](https://office.com/)
 [![.NET](https://img.shields.io/badge/.NET%20Framework%204.8.1-512BD4?style=for-the-badge&logo=.net&logoColor=white)](https://dotnet.microsoft.com/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
 > **もう、大量のシートタブに悩まされない。**  
 > ExcelVerticalTab は、Excel の左側に垂直なシート管理パネルを追加する VSTO アドインです。
@@ -16,15 +16,6 @@
 - **🖱️ ドラッグ＆ドロップ**: 直感的な操作でシートの並べ替えが可能。Excel 本体のタブ順序と完全同期。
 - **🪟 マルチウィンドウ対応**: 複数の Excel ウィンドウを開いていても、それぞれのブックに最適なパネルを表示。
 - **🛠️ Sheet Deck リボン**: 専用のリボンタブから、ワンクリックでパネルの表示/非表示を切り替え。
-
----
-
-## 📸 スクリーンショット (イメージ)
-
-| 垂直タブ表示 | シート検索・フィルタ |
-| :--- | :--- |
-| ![Vertical Tab Pane](https://via.placeholder.com/300x450?text=Vertical+Tab+UI) | ![Filtering](https://via.placeholder.com/300x450?text=Search+Filter+UI) |
-> *※ 上記はプレースホルダです。実際の動作画面はインストールしてお確かめください。*
 
 ---
 
