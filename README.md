@@ -88,4 +88,3 @@ Visual Studio を使用してデバッグや開発を行う際の手順です。
 - [VSTO 技術背景 (VSTO_EXPLANATION.md)](./docs/VSTO_EXPLANATION.md)
 
 ---
-*Created with ❤️ by the ExcelVerticalTab Team*
