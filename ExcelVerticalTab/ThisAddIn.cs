@@ -21,20 +21,29 @@ public partial class ThisAddIn
     private void ThisAddIn_Startup(object sender, EventArgs e)
     {
         Application.WorkbookActivate += Application_WorkbookActivate;
+        Application.WindowActivate += Application_WindowActivate;
         // WindowDeactivate もトリガーとして使用（ウィンドウが閉じた後の掃除用）
         Application.WindowDeactivate += Application_WindowDeactivate;
+
+        var activeWorkbook = Application.ActiveWorkbook;
+        if (activeWorkbook != null)
+        {
+            OnActivate(activeWorkbook, Application.ActiveWindow);
+        }
     }
 
     private void Application_WindowDeactivate(Excel.Workbook wb, Excel.Window wn) => PrunePanes();
 
-    private void Application_WorkbookActivate(Excel.Workbook wb) => OnActivate(wb);
+    private void Application_WorkbookActivate(Excel.Workbook wb) => OnActivate(wb, Application.ActiveWindow);
 
-    public void OnActivate(Excel.Workbook wb)
+    private void Application_WindowActivate(Excel.Workbook wb, Excel.Window wn) => OnActivate(wb, wn);
+
+    public void OnActivate(Excel.Workbook wb, Excel.Window? activeWindow = null)
     {
         // If Save As recreates the host window, the stale HWND is pruned here and a fresh pane is created.
         PrunePanes();
 
-        var window = Application.ActiveWindow;
+        var window = activeWindow ?? Application.ActiveWindow;
         if (window == null) return;
 
         var hwnd = window.Hwnd;
@@ -54,6 +63,9 @@ public partial class ThisAddIn
             currentHandler?.Dispose();
 
             var newHandler = new WorkbookHandler(wb);
+            newHandler.ShouldTrackSheetState = () =>
+                paneControl.Pane.Visible &&
+                WorkbookContainsWindow(newHandler.TargetWorkbook, hwnd);
             newHandler.Initialize();
             paneControl.Control.AssignWorkbookHandler(newHandler);
             currentHandler = newHandler;
@@ -92,7 +104,7 @@ public partial class ThisAddIn
         var control = new VerticalTabHost();
         control.Initialize();
 
-        var pane = CustomTaskPanes.Add(control, "VTab", window);
+        var pane = CustomTaskPanes.Add(control, "Sheet Deck", window);
         pane.DockPosition = Office.MsoCTPDockPosition.msoCTPDockPositionLeft;
         pane.Width = 100;
         pane.Visible = true;
@@ -154,6 +166,7 @@ public partial class ThisAddIn
     private void ThisAddIn_Shutdown(object sender, EventArgs e)
     {
         Application.WorkbookActivate -= Application_WorkbookActivate;
+        Application.WindowActivate -= Application_WindowActivate;
         Application.WindowDeactivate -= Application_WindowDeactivate;
 
         foreach (var x in _panes.Values)

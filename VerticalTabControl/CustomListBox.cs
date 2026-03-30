@@ -42,6 +42,26 @@ public class CustomListBox : ListBox
         _startPosition = PointToScreen(e.GetPosition(_targetContainer));
     }
 
+    protected override void OnPreviewMouseRightButtonDown(MouseButtonEventArgs e)
+    {
+        base.OnPreviewMouseRightButtonDown(e);
+
+        var container = GetContainer(e.OriginalSource as FrameworkElement) as ListBoxItem;
+        if (container == null) return;
+
+        if (!container.IsSelected)
+        {
+            if ((Keyboard.Modifiers & (ModifierKeys.Control | ModifierKeys.Shift)) == 0)
+            {
+                SelectedItems.Clear();
+            }
+
+            container.IsSelected = true;
+        }
+
+        container.Focus();
+    }
+
     protected override void OnPreviewMouseMove(MouseEventArgs e)
     {
         base.OnPreviewMouseMove(e);
@@ -51,6 +71,9 @@ public class CustomListBox : ListBox
         if (data == null) return;
 
         if (_targetContainer is ListBoxItem { IsSelected: false })
+            return;
+
+        if (SelectedItems.Count != 1)
             return;
 
         var currentPosition = PointToScreen(e.GetPosition(_targetContainer));

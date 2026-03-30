@@ -8,6 +8,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC"/>
         <Style x:Key="FocusVisual">
@@ -115,13 +116,111 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="RefreshButtonStyle" TargetType="{x:Type Button}">
+        <Style x:Key="ActionButtonStyle" TargetType="{x:Type Button}">
             <Setter Property="Margin" Value="2"/>
-            <Setter Property="Content" Value="Refresh"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#1F2A37"/>
+            <Setter Property="Background" Value="#F7F9FC"/>
+            <Setter Property="BorderBrush" Value="#C8D1DC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="buttonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="buttonBorder" Property="Background" Value="#EAF2FF"/>
+                                <Setter TargetName="buttonBorder" Property="BorderBrush" Value="#8FB4E8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="buttonBorder" Property="Background" Value="#DCE9FB"/>
+                                <Setter TargetName="buttonBorder" Property="BorderBrush" Value="#6E97D3"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="buttonBorder" Property="Background" Value="#F1F1F1"/>
+                                <Setter TargetName="buttonBorder" Property="BorderBrush" Value="#D7D7D7"/>
+                                <Setter Property="Foreground" Value="#8A8A8A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="IconButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource ActionButtonStyle}">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="MinHeight" Value="32"/>
+            <Setter Property="MinWidth" Value="40"/>
         </Style>
         <Style x:Key="TextBoxStyle" TargetType="{x:Type TextBox}">
             <Setter Property="Margin" Value="2"/>
         </Style>
+        <DataTemplate x:Key="SheetItemTemplate">
+            <Grid x:Name="itemRoot" Opacity="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="18"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0"
+                        Width="12"
+                        Margin="0,0,10,0"
+                        CornerRadius="4"
+                        MinHeight="18"
+                        VerticalAlignment="Stretch"
+                        Background="{Binding TabColorBrush}"
+                        BorderBrush="#B5B5B5"
+                        BorderThickness="1"/>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding Header}"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
+                <Border x:Name="hiddenBadge"
+                        Grid.Column="2"
+                        Margin="8,0,0,0"
+                        Padding="6,1"
+                        Background="#F2F2F2"
+                        BorderBrush="#D8D8D8"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Visibility="Collapsed">
+                    <TextBlock x:Name="hiddenLabel"
+                               Text="{Binding VisibilityLabel}"
+                               FontSize="10"
+                               Foreground="#666666"/>
+                </Border>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding VisibilityMode}" Value="{x:Static local:SheetVisibilityMode.Hidden}">
+                    <Setter TargetName="itemRoot" Property="Opacity" Value="0.58"/>
+                    <Setter TargetName="hiddenBadge" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="hiddenBadge" Property="Opacity" Value="1"/>
+                    <Setter TargetName="hiddenBadge" Property="BorderBrush" Value="#BFBFBF"/>
+                    <Setter TargetName="hiddenBadge" Property="Background" Value="#EEEEEE"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding VisibilityMode}" Value="{x:Static local:SheetVisibilityMode.VeryHidden}">
+                    <Setter TargetName="itemRoot" Property="Opacity" Value="0.42"/>
+                    <Setter TargetName="hiddenBadge" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="hiddenBadge" Property="Opacity" Value="1"/>
+                    <Setter TargetName="hiddenBadge" Property="BorderBrush" Value="#D4A4A4"/>
+                    <Setter TargetName="hiddenBadge" Property="Background" Value="#F7E4E4"/>
+                    <Setter TargetName="hiddenLabel" Property="Foreground" Value="#8F3A3A"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -130,9 +229,64 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBox d:DataContext="{d:DesignInstance {x:Type local:TabUserControlViewModelMock}}" 
-                 Style="{StaticResource TextBoxStyle}"
-                 Text="{Binding InputToFilter, UpdateSourceTrigger=PropertyChanged}"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid>
+                <TextBox x:Name="txtFilter"
+                         d:DataContext="{d:DesignInstance {x:Type local:TabUserControlViewModelMock}}" 
+                         Style="{StaticResource TextBoxStyle}"
+                         Text="{Binding InputToFilter, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="#8E97A3"
+                           IsHitTestVisible="False"
+                           Text="Search by Sheet Name...">
+                    <TextBlock.Style>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Text, ElementName=txtFilter}" Value="">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=txtFilter}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+            <Button x:Name="cmdSortMenu"
+                    Grid.Column="1"
+                    Style="{StaticResource IconButtonStyle}"
+                    ToolTip="Sort sheets"
+                    Click="CmdSortMenu_OnClick">
+                <Button.ContextMenu>
+                    <ContextMenu x:Name="ctxSort" Opened="SortContextMenu_OnOpened">
+                        <MenuItem x:Name="mnuSortNameAscending" Header="Name A-Z" Click="SortNameAscendingMenuItem_OnClick"/>
+                        <MenuItem x:Name="mnuSortNameDescending" Header="Name Z-A" Click="SortNameDescendingMenuItem_OnClick"/>
+                    </ContextMenu>
+                </Button.ContextMenu>
+                <Viewbox Width="16" Height="16" Stretch="Uniform">
+                    <Canvas Width="16" Height="16">
+                        <Path Data="M3,4.2H10.5 M3,8H9 M3,11.8H7.2"
+                              Stroke="#2E5B8A"
+                              StrokeThickness="1.6"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"/>
+                        <Path Data="M11.4,5.5 L13.9,8 L11.4,10.5"
+                              Stroke="#2E5B8A"
+                              StrokeThickness="1.6"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              StrokeLineJoin="Round"/>
+                    </Canvas>
+                </Viewbox>
+            </Button>
+        </Grid>
         
         <local:CustomListBox x:Name="lstTab" 
                  d:DataContext="{d:DesignInstance {x:Type local:TabUserControlViewModelMock}}"
@@ -140,16 +294,68 @@
                  Style="{StaticResource ListBoxStyle}"
                  SelectedItem="{Binding SelectedItem}"
                  ItemsSource="{Binding ItemsView}"
+                 ItemTemplate="{StaticResource SheetItemTemplate}"
                  ItemContainerStyle="{StaticResource TabItemStyle}"
-                 SelectionMode="Single"
+                 SelectionMode="Extended"
                  EnableSortByDragAndDrop="True"
                  AllowDrop="True"
-                 TryMoved="LstTab_OnTryMoved">
+                 TryMoved="LstTab_OnTryMoved"
+                 PreviewKeyDown="LstTab_OnPreviewKeyDown">
+            <local:CustomListBox.ContextMenu>
+                <ContextMenu Opened="TabContextMenu_OnOpened">
+                    <MenuItem x:Name="mnuRename" Header="Rename" Click="RenameMenuItem_OnClick"/>
+                    <MenuItem x:Name="mnuDuplicate" Header="Duplicate" Click="DuplicateMenuItem_OnClick"/>
+                    <MenuItem x:Name="mnuDelete" Header="Delete" Click="DeleteMenuItem_OnClick"/>
+                    <Separator/>
+                    <MenuItem x:Name="mnuHide" Header="Hide" Click="HideMenuItem_OnClick"/>
+                    <MenuItem x:Name="mnuVeryHide" Header="Very Hidden" Click="VeryHideMenuItem_OnClick"/>
+                    <MenuItem x:Name="mnuShow" Header="Show" Click="ShowMenuItem_OnClick"/>
+                </ContextMenu>
+            </local:CustomListBox.ContextMenu>
 
         </local:CustomListBox>
 
-        <Button x:Name="cmdRefresh" Style="{StaticResource RefreshButtonStyle}"
-                Grid.Row="2"
-                Click="CmdRefresh_OnClick"/>
+        <Grid Grid.Row="2" Margin="4,6,4,2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="cmdNew"
+                    Grid.Column="0"
+                    Style="{StaticResource IconButtonStyle}"
+                    ToolTip="New sheet"
+                    Click="CmdNew_OnClick">
+                <Viewbox Width="14" Height="14" Stretch="Uniform">
+                    <Canvas Width="14" Height="14">
+                        <Path Data="M7,2 L7,12 M2,7 L12,7"
+                              Stroke="#2E5B8A"
+                              StrokeThickness="1.8"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"/>
+                    </Canvas>
+                </Viewbox>
+            </Button>
+            <Button x:Name="cmdRefresh"
+                    Grid.Column="1"
+                    Style="{StaticResource IconButtonStyle}"
+                    ToolTip="Refresh sheets"
+                    Click="CmdRefresh_OnClick">
+                <Viewbox Width="15" Height="15" Stretch="Uniform">
+                    <Canvas Width="16" Height="16">
+                        <Path Data="M13.5,5.8C12.9,3.5 10.8,1.8 8.3,1.8C5.3,1.8 2.8,4.3 2.8,7.3C2.8,10.3 5.3,12.8 8.3,12.8C10.6,12.8 12.6,11.4 13.3,9.4"
+                              Stroke="#2E5B8A"
+                              StrokeThickness="1.6"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"/>
+                        <Path Data="M11.2,2.2H14.1V5.1"
+                              Stroke="#2E5B8A"
+                              StrokeThickness="1.6"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              StrokeLineJoin="Round"/>
+                    </Canvas>
+                </Viewbox>
+            </Button>
+        </Grid>
     </Grid>
 </UserControl>
