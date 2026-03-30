@@ -76,7 +76,7 @@ Visual Studio を使用してデバッグや開発を行う際の手順です。
 
 ## 📜 ライセンス
 
-このプロジェクトは [Apache License 2.0](LICENSE) の下で公開されています。
+このプロジェクトは [MIT License](LICENSE) の下で公開されています。
 詳細は [NOTICE](NOTICE) ファイルもあわせてご確認ください。
 
 ---
