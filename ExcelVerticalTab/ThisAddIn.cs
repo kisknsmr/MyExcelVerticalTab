@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using ExcelVerticalTab.Controls;
 using Microsoft.Office.Tools;
 using Excel = Microsoft.Office.Interop.Excel;
@@ -15,28 +16,62 @@ public partial class ThisAddIn
 {
     // キーはHWND（ウィンドウハンドル）。
     private readonly ConcurrentDictionary<int, PaneAndControl> _panes = new();
+    private readonly Timer _activationRetryTimer = new() { Interval = 1000 };
 
     private Menu? RibbonMenu { get; set; }
 
     private void ThisAddIn_Startup(object sender, EventArgs e)
     {
+        Application.WorkbookOpen += Application_WorkbookOpen;
         Application.WorkbookActivate += Application_WorkbookActivate;
         Application.WindowActivate += Application_WindowActivate;
         // WindowDeactivate もトリガーとして使用（ウィンドウが閉じた後の掃除用）
         Application.WindowDeactivate += Application_WindowDeactivate;
+        _activationRetryTimer.Tick += ActivationRetryTimer_Tick;
+        _activationRetryTimer.Start();
 
-        var activeWorkbook = Application.ActiveWorkbook;
-        if (activeWorkbook != null)
-        {
-            OnActivate(activeWorkbook, Application.ActiveWindow);
-        }
+        EnsureActiveWorkbookIsTracked();
     }
 
     private void Application_WindowDeactivate(Excel.Workbook wb, Excel.Window wn) => PrunePanes();
 
+    private void Application_WorkbookOpen(Excel.Workbook wb) => EnsureActiveWorkbookIsTracked(wb);
+
     private void Application_WorkbookActivate(Excel.Workbook wb) => OnActivate(wb, Application.ActiveWindow);
 
     private void Application_WindowActivate(Excel.Workbook wb, Excel.Window wn) => OnActivate(wb, wn);
+
+    private void ActivationRetryTimer_Tick(object? sender, EventArgs e) => EnsureActiveWorkbookIsTracked();
+
+    private void EnsureActiveWorkbookIsTracked(Excel.Workbook? preferredWorkbook = null)
+    {
+        try
+        {
+            var workbook = preferredWorkbook ?? Application.ActiveWorkbook;
+            var window = Application.ActiveWindow;
+            if (workbook == null || window == null) return;
+
+            if (!_panes.TryGetValue(window.Hwnd, out var paneControl))
+            {
+                OnActivate(workbook, window);
+                return;
+            }
+
+            var currentHandler = paneControl.Control.CurrentHandler;
+            if (currentHandler == null || !WorkbookContainsWindow(currentHandler.TargetWorkbook, window.Hwnd))
+            {
+                OnActivate(workbook, window);
+            }
+        }
+        catch (COMException)
+        {
+            // Ignore transient COM states while Excel is transitioning between open modes.
+        }
+        catch (InvalidComObjectException)
+        {
+            // Ignore temporary invalid handles while the host window is recreated.
+        }
+    }
 
     public void OnActivate(Excel.Workbook wb, Excel.Window? activeWindow = null)
     {
@@ -165,9 +200,13 @@ public partial class ThisAddIn
 
     private void ThisAddIn_Shutdown(object sender, EventArgs e)
     {
+        Application.WorkbookOpen -= Application_WorkbookOpen;
         Application.WorkbookActivate -= Application_WorkbookActivate;
         Application.WindowActivate -= Application_WindowActivate;
         Application.WindowDeactivate -= Application_WindowDeactivate;
+        _activationRetryTimer.Stop();
+        _activationRetryTimer.Tick -= ActivationRetryTimer_Tick;
+        _activationRetryTimer.Dispose();
 
         foreach (var x in _panes.Values)
         {
